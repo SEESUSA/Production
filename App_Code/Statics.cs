@@ -12,14 +12,14 @@ public static class Statics
      public const string CPSALconnstring = "Server=SEES-DEV; Database=Birmingham; UID=umad; PWD=EMRUser2003;Connect Timeout=200; pooling='true'; Max Pool Size=200";
     public const string CPSTNconnstring = "Server=SEES-DEV; Database=Nashville; UID=umad; PWD=EMRUser2003;Connect Timeout=200; pooling='true'; Max Pool Size=200";
     public const string DEMOconnstring = "Server=SEES-DEV; Database=DEMO;UID=umad;PWD=EMRUser2003;Connect Timeout=200; pooling='true'; Max Pool Size=200";
-    public const string FROMEMAIL = "donotreply@eyehealthpartners.com";
-    public const string EMAILUSERNAME = "donotreply@eyehealthpartners.com";
-    public const string EMAILPASSWORD = "T9#gAcR7r$";
+    public const string FROMEMAIL = "rppdonotreply@theseesgroup.com";
+    public const string EMAILUSERNAME = "rppdonotreply@theseesgroup.com";
+    public const string EMAILPASSWORD = "Nuj39590";
     public const string EMAILDOMAIN = "SEESGROUP.com";
-    public const string SMTPHOST = "smtp.office365.com";
+    public const string SMTPHOST = "smtp-legacy.office365.com";
     // Had to change SMTPPORT from port 587 to port 25 due to the email stopped working.
     // Guessing C Spire started blocking port 587 for some reason.
-    public const int SMTPPORT = 25; 
+    public const int SMTPPORT = 25;
     public const int MinPwdLength = 6;
     public static string[] States = new string[] { "AL", "TN" };
     public static string[] ConnStrings = new string[] { CPSALconnstring, CPSTNconnstring };
