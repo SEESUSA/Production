@@ -28,6 +28,7 @@ public partial class Tasks : System.Web.UI.UserControl
         cboTask.Items.Add(new ListItem("Schedule Appointment", "3"));
         // cboTask.Items.Add(new ListItem("Edit Profile", "1"));
         cboTask.Items.Add(new ListItem("Change Password", "4"));
+        if (API.Session.IsAdmin) { cboTask.Items.Add(new ListItem("Export Appointment Log", "2")); }
         cboTask.Items.Add(new ListItem("Logoff", "5"));
         SetTask();
     }
@@ -35,9 +36,9 @@ public partial class Tasks : System.Web.UI.UserControl
     {
         switch (cboTask.SelectedItem.Text)
         {
-            //     case "Edit Profile":
-            //         Response.Redirect("~/EditProfiles.aspx");
-            //         break;
+            case "Edit Profile":
+                Response.Redirect("~/EditProfiles.aspx");
+                break;
             case "Schedule Appointment":
                 Response.Redirect("~/CareCloudLogin.aspx");
                 break;
@@ -49,6 +50,10 @@ public partial class Tasks : System.Web.UI.UserControl
                 break;
             case "CareCloudLogin":
                 Response.Redirect("~/CareCloudLogin.aspx");
+                break;
+
+            case "Export Appointment Log":
+                Response.Redirect("~/Export.aspx");
                 break;
             default:
                 break;
@@ -66,6 +71,9 @@ public partial class Tasks : System.Web.UI.UserControl
                 break;
             case "/EHPortal/ChangePassword.aspx":
                 cboTask.SelectedIndex = 3;
+                break;
+            case "/EHPortal/Export.aspx":
+                cboTask.SelectedIndex = 4;
                 break;
             default:
                 cboTask.SelectedIndex = 0;
