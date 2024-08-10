@@ -79,40 +79,12 @@
     </script>--%>
     <script type="text/javascript">
         $(document).ready(function () {
-          //  alert(1);
-            //var availableTags = [
-            //    "ActionScript",
-            //    "AppleScript",
-            //    "Asp",
-            //    "BASIC",
-            //    "C",
-            //    "C++",
-            //    "Clojure",
-            //    "COBOL",
-            //    "ColdFusion",
-            //    "Erlang",
-            //    "Fortran",
-            //    "Groovy",
-            //    "Haskell",
-            //    "Java",
-            //    "JavaScript",
-            //    "Lisp",
-            //    "Perl",
-            //    "PHP",
-            //    "Python",
-            //    "Ruby",
-            //    "Scala",
-            //    "Scheme"
-            //];
+          
             var cboEHPFacilityitem = $("#cboEHPFacility option:selected").val();
             var getPVId = new Array();
             getPVId = $("#cboLocation option:selected").val().split('^');
            
-            //alert(cboEHPFacilityitem);
-            //alert(typeof(cboEHPFacilityitem) == "undefined" ? "true" : "false");
-           
              $("#cboPatient1").autocomplete({
-                        //  source: availableTags
                  source: function (req, res) {
                      if (typeof (cboEHPFacilityitem) == "undefined") { }
                      else {
@@ -126,15 +98,6 @@
                                  contentType: "application/json; charset=utf-8",
                                  success: function (data) {
                                      var items = [];
-                                     //res($.map(data, function (item) {
-                                     //    return {
-                                     //        label: item.PatientName,
-                                     //        value: item.PatientName,
-                                     //        id: item.PID,
-                                     //        costFactor: item.PID
-                                     //    };
-                                     //    items.push(item);
-                                     //});
                                      $.each(data.d, function (key, val) {
                                          var item = {
                                              label: val.PatientName,
@@ -160,7 +123,6 @@
                         minLength: 3,
                         delay: 500,
                  select: function (event, ui) {
-                  //   alert(ui.item.id + " " + ui.item.value);
                      $("#hdnpId").val(ui.item.id);
                      //Filter only numbers from the input
                      let cleaned = ('' + ui.item.costFactor).replace(/\D/g, '');
@@ -169,17 +131,15 @@
                      let match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
 
                      if (match) {
-                         // return '(' + match[1] + ') ' + match[2] + '-' + match[3]
                          $("#txtPhone").val(match[1] + '-' + match[2] + '-' + match[3]);
                          $("#Label2").text("Please verify the contact number. If different, please provide correct contact number in " + '"Reason for Visit"' + " section.");
                      } else {
                         // $("#txtPhone").val("");
                      }
-                    // $("#txtPhone").val(ui.item.costFactor);
-                    // $("#txtPhone").val();
                         }
 
              });
+
             $("#cboPatient1").focusout(function () {
                 if ($("#hdnpId").val() == "" && $("#cboPatient1").val() != "") {
                     alert("Please Provide Patient Name or click New to create new Patient");
@@ -299,9 +259,9 @@
             </div>
             </div>
             <label>Eye</label>
-                <asp:RadioButton runat="server" ID="rbEyeLeft" Text="Left" Checked="false" AutoPostBack="true" OnCheckedChanged="rbEyeLeft_CheckedChanged" />
-                <asp:RadioButton runat="server" ID="rbEyeRight" Text="Right" Checked="false" AutoPostBack="true" OnCheckedChanged="rbEyeRight_CheckedChanged" />
-                <asp:RadioButton runat="server" ID="rbBoth" Text="Both" Checked="true" AutoPostBack="true" OnCheckedChanged="rbBoth_CheckedChanged" />
+                <asp:RadioButton runat="server" ID="rbEyeLeft" Text="Left" Checked="false"  OnCheckedChanged="rbEyeLeft_CheckedChanged" />
+                <asp:RadioButton runat="server" ID="rbEyeRight" Text="Right" Checked="false" OnCheckedChanged="rbEyeRight_CheckedChanged" />
+                <asp:RadioButton runat="server" ID="rbBoth" Text="Both" Checked="true" OnCheckedChanged="rbBoth_CheckedChanged" />
            
             <label>Reason for Visit  <i style="color:red">*</i>  
                 <asp:TextBox runat="server" ID="txtReason" CssClass="TextField"  TextMode="MultiLine" Rows="4" Width="100%" MaxLength="45"  /></label>
@@ -356,4 +316,10 @@
         }, 30000);
     });
 
+    $("#btnCancel").click(function () {
+        $(".loader-container").show();
+        setTimeout(function () {
+            $(".loader-container").hide();
+        }, 45000);
+    });
 </script> 
