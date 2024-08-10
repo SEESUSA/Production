@@ -48,6 +48,9 @@
     transform: rotate(360deg);
   }
 }
+.column-space {
+    padding-right: 10px; /* Adjust as needed */
+}
 </style>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head id="Head1" runat="server">
@@ -120,24 +123,13 @@
                 }
             });
 
-            $("#btnSave").click(function () {
-                $(".loader-container").show();
-                setTimeout(function () {
-                    $(".loader-container").hide();
-                }, 45000);
-            });
 
-            $("#btnCancel").click(function () {
-                $(".loader-container").show();
-                setTimeout(function () {
-                    $(".loader-container").hide();
-                }, 45000);
-            });
 
-            
             $(function () {
                 $(".date-picker").datepicker();
             });
+
+
         });
         function onlyAlphabets(e) {
             // Allow only alphabets (A-Z and a-z)
@@ -150,6 +142,9 @@
             return (key >= 48 && key <= 57) || key == 45 || key == 8;
         
         }
+
+       
+        
     </script>
 </head>
 <body>
@@ -169,10 +164,11 @@
             <label>Date of Birth  <i style="color:red">*</i>
                 <asp:TextBox runat="server" ID="txtDOB" MaxLength="10" CssClass="TextField date-picker" placeholder="MM-DD-YYYY"/></label>
             <label>Phone <i style="color:red">*</i>
-                <asp:TextBox runat="server" ID="txtPhone" CssClass="TextField" MaxLength="12" onkeypress="return onlyAllowedCharacters(event)"/>
-                <%--<asp:RegularExpressionValidator ID="RegularExpressionValidator1" runat="server" ErrorMessage="The PhoneNumber field is not a valid phone number." ControlToValidate="txtPhone" ValidationExpression="^[0-9]{3}-[0-9]{3}-[0-9]{4}$" ></asp:RegularExpressionValidator>--%>
+                <asp:TextBox runat="server" ID="txtPhone" CssClass="TextField" MaxLength="12" onkeypress="return onlyAllowedCharacters(event)"/>               
             </label>
-           
+            <label>Email Address
+                <asp:TextBox runat="server" ID="txtEmailAddresss" CssClass="TextField"/>
+            </label>           
               <label>SSN
                 <asp:TextBox runat="server" ID="txtSSN" CssClass="TextField" MaxLength="11" /></label>
             <div class="buttons">
@@ -190,23 +186,22 @@
         </div>
         <br />
            <div>
-            <asp:GridView ID="GVpatients" runat="server" AutoGenerateColumns="false" DataKeyNames="PID"  OnRowCommand="GVpatients_RowCommand">
+            <asp:GridView ID="GVpatients" runat="server" AutoGenerateColumns="false" DataKeyNames="PID"  OnRowCommand="GVpatients_RowCommand" >
                 <Columns>  
-                    <asp:BoundField DataField="PatientName" HeaderText="PatientName" /> 
-                    <asp:BoundField DataField="Gender" HeaderText="Gender" /> 
-                    <asp:BoundField DataField="DateOfBirth" HeaderText="DateOfBirth" /> 
-                    <asp:BoundField DataField="PhoneNumber" HeaderText="PhoneNumber" DataFormatString="{0:###-###-####}" />
-                   <%-- <asp:TemplateField>
-    <ItemTemplate>
-        <asp:Literal ID="litPhone" runat="server" Text='<%# string.Format("{0:(###) ###-####}", Int64.Parse(Eval("MainPhoneNumber").ToString())) %>' />
-    </ItemTemplate>
-</asp:TemplateField>--%>
-                       <asp:TemplateField>
-            <ItemTemplate>
-                <asp:Button Text="Select" runat="server" CommandName="Select" CommandArgument="<%# Container.DataItemIndex %>" />
-            </ItemTemplate>
-        </asp:TemplateField>
-                        </Columns>
+                    <asp:BoundField DataField="PatientName" HeaderText="PatientName" ItemStyle-Width="100px"  /> 
+                    <asp:BoundField DataField="Gender" HeaderText="Gender" ItemStyle-Width="100px"  /> 
+                     <asp:TemplateField HeaderText="DateOfBirth" >
+                    <ItemTemplate>
+                    <%# Convert.ToDateTime(Eval("DateOfBirth")).ToString("MM-dd-yyyy") %>
+                    </ItemTemplate>
+                    </asp:TemplateField>
+                    <asp:BoundField DataField="PhoneNumber" HeaderText="PhoneNumber" DataFormatString="{0:###-###-####}" ItemStyle-Width="100px"  />                  
+                    <asp:TemplateField >
+                    <ItemTemplate >
+                    <asp:Button Text="Select" runat="server" CommandName="Select" CommandArgument="<%# Container.DataItemIndex %>" ItemStyle-Width="100px" />
+                    </ItemTemplate>
+                    </asp:TemplateField>
+                </Columns>
             </asp:GridView>
         </div>
 

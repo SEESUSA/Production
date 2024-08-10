@@ -5,7 +5,9 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Mail;
 using System.Text.RegularExpressions;
+using System.Timers;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
@@ -13,6 +15,8 @@ using System.Xml;
 
 public partial class AddPatientWithCareCloud : System.Web.UI.Page
 {
+   static DataTable dt = new DataTable();
+
     protected void Page_Load(object sender, EventArgs e)
     {
         API.Session.PatientExistsError += Err;
@@ -32,6 +36,7 @@ public partial class AddPatientWithCareCloud : System.Web.UI.Page
 
     protected void btnSave_Click(object sender, EventArgs e)
     {
+        API.Session.PtEmailAddress = null;
         if (ValidateData())
         {
             CreatePatient();
@@ -82,24 +87,23 @@ public partial class AddPatientWithCareCloud : System.Web.UI.Page
        
             string gender = string.Empty;
         //API.Session.GUID
-        string[] data = API.Session.GetNPI(API.Session.Email);
+        string LoginEmail = API.Session.Email;
+        string[] data = API.Session.GetNPIByEmail(API.Session.Email, API.Session.SWLocationID);
         string NPI1 = "";
         if (data != null)
         {
             NPI1 = data[0];
         }
-        //string[] Locarray = API.Session.refDocval.Split('^');
-        //string postData = "{\"patient\":{\"first_name\":" + "\""+ txtFirstName.Text + "\"" + ",\"last_name\":" + "\""+ txtLastName.Text + "\"" + "},\"addresses\":[{\"line1\":"+ "\"" + address + "\"" + ",\"line2\":\"\",\"city\":\"ABC\",\"state\":" + "\"" + location + "\"" + ",\"zip_code\":\"00000\",\"country_name\":\"USA\",\"is_primary\":true}],\"phones\":[{\"phone_number\":" + "\"" + txtPhone.Text + "\"" + ",\"phone_type_code\":\"2\",\"extension\":\"12\",\"is_primary\":true}]}";
         DateTime originaldate;
         DateTime.TryParse(txtDOB.Text, out originaldate);
-        //string postData = "{\"patient\":{\"first_name\":" + "\"" + txtFirstName.Text + "\",\"last_name\":" + "\"" + txtLastName.Text + "\",\"gender_code\":" + "\"" + cboGender.SelectedValue.ToString() + "\",\"date_of_birth\":" + "\"" + txtDOB.Text + "\"},\"addresses\":[{\"line1\":\"abc\",\"line2\":\"\",\"city\":\"ABC\",\"state\":" + "\"" + location + "\",\"zip_code\":\"00000\",\"country_name\":\"USA\",\"is_primary\":true}],\"phones\":[{\"phone_number\":" + "\"" + txtPhone.Text + "\",\"phone_type_code\":\"M\",\"is_primary\":true}]}";
-        //string postData = "{\"patient\":{\"first_name\":" + "\"" + txtFirstName.Text + "\",\"last_name\":" + "\"" + txtLastName.Text + "\",\"gender_code\":" + "\"" + cboGender.SelectedValue.ToString() + "\",\"date_of_birth\":" + "\"" + txtDOB.Text + "\",\"ssn\":" + "\"" + txtSSN.Text + "\",\"referring_physician_npi\":" + Convert.ToInt32(data[0]) +"},\"addresses\":[{\"line1\":\"abc\",\"line2\":\"\",\"city\":\"ABC\",\"state\":" + "\"" + location + "\",\"zip_code\":\"00000\",\"country_name\":\"USA\",\"is_primary\":true}],\"phones\":[{\"phone_number\":" + "\"" + phonenum + "\",\"phone_type_code\":\"M\",\"is_primary\":true}]}";
-        string postData = "{\"patient\":{\"first_name\":" + "\"" + txtFirstName.Text + "\",\"last_name\":" + "\"" + txtLastName.Text + "\",\"gender_code\":" + "\"" + cboGender.SelectedValue.ToString() + "\",\"date_of_birth\":" + "\"" + originaldate.ToString("yyyy-MM-dd") + "\" "+ (string.IsNullOrEmpty(txtSSN.Text) || txtSSN.Text=="" ? "" : ",\"ssn\":" + "\"" + GetSSN + "\"") + "},\"addresses\":[{\"line1\":\"abc\",\"line2\":\"\",\"city\":\"ABC\",\"state\":" + "\"" + StLocation + "\",\"zip_code\":\"00000\",\"country_name\":\"USA\",\"is_primary\":true}],\"phones\":[{\"phone_number\":" + "\"" + phonenum + "\",\"phone_type_code\":\"C\",\"is_primary\":true}]}";
-        
-        using (var streamWriter = new StreamWriter(PostRequest.GetRequestStream()))
+        API.Session.SWPatient = (txtFirstName.Text.Trim().Length > 0 ? txtFirstName.Text.Trim()[0].ToString() + "***  " : " ") + (txtLastName.Text.Trim().Length > 0 ? txtLastName.Text.Trim()[0].ToString() + "***  " : " ");
+        string postData = "{\"patient\":{\"first_name\":" + "\"" + txtFirstName.Text + "\",\"last_name\":" + "\"" + txtLastName.Text + "\",\"email\":" + "\"" + txtEmailAddresss.Text.ToString() + "\",\"gender_code\":" + "\"" + cboGender.SelectedValue.ToString() + "\",\"date_of_birth\":" + "\"" + originaldate.ToString("yyyy-MM-dd") + "\" "+ (txtSSN.Text=="" ? "" : ",\"ssn\":" + "\"" + GetSSN + "\"") + ",\"referring_physician_npi\":" + (data[0]!=""?Convert.ToInt32(data[0]).ToString() : "\""+"\"" )+ "},\"addresses\":[{\"line1\":\"abc\",\"line2\":\"\",\"city\":\"ABC\",\"state\":" + "\"" + StLocation + "\",\"zip_code\":\"00000\",\"country_name\":\"USA\",\"is_primary\":true}],\"phones\":[{\"phone_number\":" + "\"" + phonenum + "\",\"phone_type_code\":\"M\",\"is_primary\":true}]}";
+        try
+        {
+            using (var streamWriter = new StreamWriter(PostRequest.GetRequestStream()))
             {
                 streamWriter.Write(postData);
-               streamWriter.Flush();
+                streamWriter.Flush();
                 streamWriter.Close();
 
                 var httpWebResponse2 = (HttpWebResponse)PostRequest.GetResponse();
@@ -112,25 +116,25 @@ public partial class AddPatientWithCareCloud : System.Web.UI.Page
             }
             DataSet dataSet = new DataSet();
             XmlDocument xd = new XmlDocument();
-            //doctorResponse = "{ \"rootNode\": {" + doctorResponse.Trim().TrimStart('{').TrimEnd('}') + "} }";
             xd = (XmlDocument)JsonConvert.DeserializeXmlNode(responseString);
 
             API.Session.PatientId = xd.InnerText;
-            var Result = API.Session.CreatePatient(xd.InnerText,txtFirstName.Text, txtLastName.Text, cboGender.SelectedValue.ToString(), Convert.ToDateTime(txtDOB.Text), Convert.ToString(NPI1), "abc", API.Session.CityName.ToString(), location, "00000", "USA", phonenum, txtSSN.Text);
-        if (Result == "true" || Result == "")
-        {
-            API.Session.PatientPhone = phonenum;
-            Server.Transfer("~/ScheduleApptWithCareCloud.aspx", false);
-            HttpContext.Current.ApplicationInstance.CompleteRequest();
+            var Result = API.Session.CreatePatient(xd.InnerText, txtFirstName.Text, txtLastName.Text, cboGender.SelectedValue.ToString(), Convert.ToDateTime(txtDOB.Text), Convert.ToString(NPI1), "abc", API.Session.CityName.ToString(), location, "00000", "USA", phonenum, txtSSN.Text, txtEmailAddresss.Text);
+            //Update Appointment Create Request And Response
+            API.Session.UpdateAppointmentReqResponse(postData, responseString, "Patient", "","");
+            if (Result == "true" || Result == "")
+            {
+                API.Session.PatientPhone = phonenum;
+                API.Session.PtEmailAddress = txtEmailAddresss.Text;
+                Server.Transfer("~/ScheduleApptWithCareCloud.aspx", false);
 
+            }
         }
-        //else
-        //{
-        //    Response.Redirect("~/AddPatientWithCareCloud.aspx");
-
-
-        //}
-
+        catch(Exception ex)
+        {
+            //Update Appointment Create Request And Response
+            API.Session.UpdateAppointmentReqResponse(postData, ex.Message, "Patient", "","");
+        }
     }
 
     protected void Err(int number, string msg)
@@ -146,7 +150,6 @@ public partial class AddPatientWithCareCloud : System.Web.UI.Page
     protected bool ValidateData()
     {
 
-        DataTable dt = new DataTable();
         if (txtFirstName.Text == "") { Err(1112, "You must provide the First Name."); return false; }
         if (txtLastName.Text == "") { Err(1113, "You must provide the Last Name."); return false; }
         if (cboGender.SelectedIndex == 0) { Err(1114, "You must select the Gender first."); return false; }
@@ -156,28 +159,17 @@ public partial class AddPatientWithCareCloud : System.Web.UI.Page
         string phonenum = regex.Replace(txtPhone.Text, "");
         string location = API.Session.ChState.ToString();
         if (Convert.ToInt32(phonenum.Length) < 10 || Convert.ToInt32(phonenum.Length) > 10) { Err(1116, "You must provide the valid Phone number."); return false; }
+
+        if (txtEmailAddresss.Text != "" && !IsValidEmail(txtEmailAddresss.Text)) { Err(1116, "You must provide the valid Email Address."); return false; }
+        if (txtSSN.Text != "" && txtSSN.Text.Length<11) { Err(1116, "You must provide the valid SSN."); return false; }
         var Result = API.Session.ValidatePatient(txtFirstName.Text, txtLastName.Text, cboGender.SelectedValue.ToString(), Convert.ToDateTime(txtDOB.Text), phonenum, txtSSN.Text, API.Session.CityName.ToString(), location);
         if (Result == "false" || Result=="")
         {
 
-           
+            API.Session.SWPatient = (txtFirstName.Text.Trim().Length>0 ? txtFirstName.Text.Trim()[0].ToString()+ "***  " : " ")+ (txtLastName.Text.Trim().Length > 0 ? txtLastName.Text.Trim()[0].ToString() + "***  " : " ");
             DataTable dt1 = new DataTable();
-            //string location = API.Session.ChState.ToString();
-            dt = API.Session.GetPatient(txtFirstName.Text, txtLastName.Text, cboGender.SelectedValue.ToString(), Convert.ToDateTime(txtDOB.Text), phonenum, txtSSN.Text, API.Session.CityName.ToString(), location);
-            //dt.Columns.AddRange(new DataColumn[3] { new DataColumn("PID"), new DataColumn("PatientSSN"), new DataColumn("PatientName") });
-            //foreach (DataRow row in dt1.Rows)
-            //{
-            //    dt.Rows.Add(row["PID"].ToString(), row["PatientSSN"].ToString(), row["PatientName"].ToString());
-
-            //}
-
-            GVpatients.DataSource = dt;
-            GVpatients.DataBind();
-            return false;
-        }
-        else if(Result == "SSNExists")
-        {
             dt = null;
+            dt = API.Session.GetPatient(txtFirstName.Text, txtLastName.Text, cboGender.SelectedValue.ToString(), Convert.ToDateTime(txtDOB.Text), phonenum, txtSSN.Text, API.Session.CityName.ToString(), location);
             GVpatients.DataSource = dt;
             GVpatients.DataBind();
             return false;
@@ -188,19 +180,44 @@ public partial class AddPatientWithCareCloud : System.Web.UI.Page
         }
 
     }
+    static bool IsValidEmail(string emailAddress)
+    {
+        // Regular expression for validating email addresses
+        string emailRegex = @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$";
 
+        // Check if the email address matches the regex pattern
+        return Regex.IsMatch(emailAddress, emailRegex);
+    }
 
     protected void GVpatients_RowCommand(object sender, GridViewCommandEventArgs e)
     {
         if (e.CommandName == "Select")
         {
+
+            API.Session.PtEmailAddress = null;
+            API.Session.SWPatient=null;
             //Determine the RowIndex of the Row whose Button was clicked.
             int rowIndex = Convert.ToInt32(e.CommandArgument);
             GridViewRow row = GVpatients.Rows[rowIndex]; 
             //Get the value of column from the DataKeys using the RowIndex.
+            string PatientId= Convert.ToString(GVpatients.DataKeys[rowIndex].Values[0]);
             API.Session.patientId = Convert.ToString(GVpatients.DataKeys[rowIndex].Values[0]);
             API.Session.PatientPhone = Convert.ToString(row.Cells[3].Text);
+            if (dt != null)
+            {
+                foreach(DataRow dr in dt.Rows)
+                {
+                    if (PatientId == dr["PID"].ToString())
+                    {
+                        API.Session.PtEmailAddress = Convert.ToString(dr["EmailAddress"].ToString());
+                        API.Session.SWPatient = (dr["FirstName"].ToString().Trim().Length > 0 ? dr["FirstName"].ToString().Trim()[0].ToString() + "***  " : " ") + (dr["LastName"].ToString().Trim().Length > 0 ? dr["LastName"].ToString().Trim()[0].ToString() + "***  " : " ");
+                        break;
+                    }
+                }
+            }
             Response.Redirect("~/ScheduleApptWithCareCloud.aspx");
         }
+        
     }
+    
 }
